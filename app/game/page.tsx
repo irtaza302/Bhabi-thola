@@ -53,10 +53,19 @@ export default function GamePage() {
     useEffect(() => {
         // Build session check and initialize Ably
         const initialize = async () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:53',message:'useEffect initialize called',data:{cookies:document.cookie,hasToken:document.cookie.includes('token')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             try {
                 const res = await fetch('/api/auth/me');
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:58',message:'/api/auth/me response',data:{status:res.status,ok:res.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 if (res.ok) {
                     const data = await res.json();
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:60',message:'Auto-login successful',data:{userId:data.user?.id,username:data.user?.username},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+                    // #endregion
                     setUser(data.user);
                     setName(data.user.name);
                     
@@ -137,9 +146,25 @@ export default function GamePage() {
                         addDebugLog(`🔥 Failed to initialize Ably: ${err.message || err}`);
                         setError(`Failed to connect: ${err.message || err}`);
                     }
+                } else {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:149',message:'/api/auth/me returned 401 - not authenticated',data:{status:res.status},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+                    // #endregion
+                    // User is not authenticated - clear all state
+                    setUser(null);
+                    setName('');
+                    setGameState(null);
+                    setJoined(false);
+                    setPlayerId('');
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:157',message:'State cleared after 401',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+                    // #endregion
                 }
             } catch (err) {
                 console.error('Session check failed', err);
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:163',message:'Session check error',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
             } finally {
                 setIsAuthenticating(false);
             }
@@ -280,9 +305,35 @@ export default function GamePage() {
 
                     <div className="absolute top-4 right-4 flex gap-2">
                         <button
-                            onClick={() => {
-                                document.cookie = 'token=; Max-Age=0; path=/;';
-                                setUser(null);
+                            onClick={async () => {
+                                // #region agent log
+                                fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:283',message:'Logout button clicked',data:{userId:user?.id,username:user?.username},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+                                // #endregion
+                                try {
+                                    // Call logout API endpoint to properly delete httpOnly cookie
+                                    const res = await fetch('/api/auth/logout', {
+                                        method: 'POST',
+                                    });
+                                    // #region agent log
+                                    fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:288',message:'Logout API response',data:{status:res.status,ok:res.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+                                    // #endregion
+                                    if (res.ok) {
+                                        // Clear all local state including gameState
+                                        setUser(null);
+                                        setName('');
+                                        setJoined(false);
+                                        setGameState(null);
+                                        setPlayerId('');
+                                        // #region agent log
+                                        fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:300',message:'All state cleared after successful logout',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'E'})}).catch(()=>{});
+                                        // #endregion
+                                    }
+                                } catch (error: any) {
+                                    console.error('Logout error:', error);
+                                    // #region agent log
+                                    fetch('http://127.0.0.1:7243/ingest/a089e923-ee69-4190-bdae-396bac87ab13',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/game/page.tsx:300',message:'Logout API call failed',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+                                    // #endregion
+                                }
                             }}
                             className="p-2 hover:bg-white/10 rounded-full text-red-400/60 hover:text-red-400 transition-colors z-10"
                             title="Logout"
