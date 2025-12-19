@@ -228,6 +228,12 @@ export const handleJoin = async (playerId: string, name: string, userId?: string
     return { success: true };
   }
 
+  // Check maximum player limit (8 players)
+  const MAX_PLAYERS = 8;
+  if (gameState.players.length >= MAX_PLAYERS) {
+    return { success: false, error: `Game is full! Maximum ${MAX_PLAYERS} players allowed.` };
+  }
+
   // New player
   const newPlayer: Player = {
     id: playerId,
