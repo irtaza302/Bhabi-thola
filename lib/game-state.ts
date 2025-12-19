@@ -207,24 +207,39 @@ export const handleJoin = async (playerId: string, name: string, userId?: string
   }
 
   // Check for existing player (reconnection)
-  const existingPlayer = gameState.players.find(p => (userId && p.dbId === userId) || p.name === name);
+  // Match by userId (dbId) first, then by name if userId not provided
+  const existingPlayer = gameState.players.find(p => 
+    (userId && p.dbId === userId) || (!userId && p.name === name)
+  );
   
   if (existingPlayer) {
-    if (existingPlayer.isConnected) {
-      return { success: false, error: 'Already in game' };
-    }
-    // Reconnection
-    if (gameState.currentTurn === existingPlayer.id) {
+    // Allow reconnection even if already connected (handles page refresh, new tab, etc.)
+    // Update playerId to the new one and mark as connected
+    const oldPlayerId = existingPlayer.id;
+    
+    // Update currentTurn if it was the old playerId
+    if (gameState.currentTurn === oldPlayerId) {
       gameState.currentTurn = playerId;
     }
+    
+    // Update any table cards that reference the old playerId
     gameState.tableCards.forEach(tc => {
-      if (tc.playerId === existingPlayer.id) {
+      if (tc.playerId === oldPlayerId) {
         tc.playerId = playerId;
       }
     });
+    
+    // Update the player's ID and connection status
     existingPlayer.id = playerId;
     existingPlayer.isConnected = true;
-    gameState.message = `${name} reconnected!`;
+    
+    // Set appropriate message
+    if (oldPlayerId === playerId) {
+      gameState.message = `${name} is ready!`;
+    } else {
+      gameState.message = `${name} reconnected!`;
+    }
+    
     await updateGameState(gameState);
     return { success: true };
   }
