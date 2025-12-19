@@ -17,9 +17,14 @@ export async function GET() {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY;
+    // Try both NEXT_PUBLIC_ABLY_API_KEY and ABLY_API_KEY for compatibility
+    const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY || process.env.ABLY_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'Ably API key not configured' }, { status: 500 });
+      console.error('Ably API key missing. Check environment variables.');
+      return NextResponse.json({ 
+        error: 'Ably API key not configured',
+        hint: 'Set ABLY_API_KEY or NEXT_PUBLIC_ABLY_API_KEY in Vercel environment variables'
+      }, { status: 500 });
     }
 
     // Create Ably REST client

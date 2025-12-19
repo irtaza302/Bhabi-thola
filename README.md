@@ -61,13 +61,39 @@ This app is fully compatible with Vercel deployment:
 1. **Set Environment Variables** in Vercel:
    - `ABLY_API_KEY` - Your Ably API key
    - `NEXT_PUBLIC_DATABASE_URL` - Your database connection string
+   - `JWT_SECRET` - (Optional) Secret key for JWT tokens (defaults to a development key if not set)
 
-2. **Deploy**:
+2. **Run Database Migrations** (IMPORTANT):
+   Before or after deployment, you need to create the database tables:
+   ```bash
+   # Set your database URL
+   export NEXT_PUBLIC_DATABASE_URL="your_database_url"
+   
+   # Run migrations
+   npx drizzle-kit push
+   ```
+   
+   Or use Vercel's CLI with environment variables:
+   ```bash
+   vercel env pull .env.local
+   npx drizzle-kit push
+   ```
+
+3. **Deploy**:
    ```bash
    vercel
    ```
 
+4. **Verify Database Connection**:
+   After deployment, check the health endpoint:
+   ```
+   https://bhabi-thola.vercel.app/api/health
+   ```
+   This will confirm if your database is connected and tables exist.
+
 The app uses Ably for real-time communication, which works perfectly with Vercel's serverless architecture. No separate WebSocket server needed!
+
+**Production URL**: https://bhabi-thola.vercel.app
 
 ## Debugging
 
@@ -85,6 +111,22 @@ The game includes a comprehensive debug console:
 2. **Verify you're the host**: Only the first player can start
 3. **Check Ably connection**: Look for connection status in debug console
 4. **Use debug console**: Click "Debug" to see connection status
+
+### Authentication Errors (401/500)
+1. **500 Error on Signup/Login**: 
+   - Most likely cause: Database tables don't exist
+   - **Solution**: Run database migrations: `npx drizzle-kit push`
+   - Check health endpoint: `https://bhabi-thola.vercel.app/api/health`
+   - Verify `NEXT_PUBLIC_DATABASE_URL` is set correctly in Vercel
+
+2. **401 Error on Login**:
+   - User doesn't exist or password is incorrect (this is normal for new users)
+   - Try signing up first if you haven't created an account
+
+3. **Database Connection Issues**:
+   - Verify your database URL is correct
+   - Check if your database allows connections from Vercel's IPs
+   - For Neon/PostgreSQL: Ensure connection pooling is configured correctly
 
 ### Connection Issues
 1. **Ably API key**: Make sure `ABLY_API_KEY` is set in environment variables

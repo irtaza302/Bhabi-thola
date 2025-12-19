@@ -13,19 +13,45 @@ export async function POST(request: Request) {
         }
 
         // Check if user already exists
-        const existingUser = await db.select().from(users).where(eq(users.username, username)).limit(1);
+        let existingUser;
+        try {
+            existingUser = await db.select().from(users).where(eq(users.username, username)).limit(1);
+        } catch (dbError: any) {
+            console.error('Database query error (check existing):', dbError);
+            return NextResponse.json({ 
+                error: 'Database connection error',
+                details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+            }, { status: 500 });
+        }
+
         if (existingUser.length > 0) {
             return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
         }
 
         const hashedPassword = await hashPassword(password);
 
-        const [newUser] = await db.insert(users).values({
-            username,
-            password: hashedPassword,
-            name,
-            email,
-        }).returning();
+        let newUser;
+        try {
+            [newUser] = await db.insert(users).values({
+                username,
+                password: hashedPassword,
+                name,
+                email,
+            }).returning();
+        } catch (dbError: any) {
+            console.error('Database insert error:', dbError);
+            // Check if it's a table doesn't exist error
+            if (dbError.message?.includes('does not exist') || dbError.message?.includes('relation')) {
+                return NextResponse.json({ 
+                    error: 'Database tables not found. Please run migrations.',
+                    details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+                }, { status: 500 });
+            }
+            return NextResponse.json({ 
+                error: 'Failed to create user',
+                details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+            }, { status: 500 });
+        }
 
         const token = await createToken({ id: newUser.id, username: newUser.username });
 
@@ -43,6 +69,12 @@ export async function POST(request: Request) {
         return response;
     } catch (error: any) {
         console.error('Signup error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        const errorMessage = process.env.NODE_ENV === 'development' 
+            ? error.message || 'Internal server error'
+            : 'Internal server error';
+        return NextResponse.json({ 
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        }, { status: 500 });
     }
 }

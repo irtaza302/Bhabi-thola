@@ -15,9 +15,10 @@ import {
 
 // Initialize Ably client
 const getAblyClient = () => {
-  const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY;
+  // Try both NEXT_PUBLIC_ABLY_API_KEY and ABLY_API_KEY for compatibility
+  const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY || process.env.ABLY_API_KEY;
   if (!apiKey) {
-    throw new Error('NEXT_PUBLIC_ABLY_API_KEY environment variable is required');
+    throw new Error('ABLY_API_KEY or NEXT_PUBLIC_ABLY_API_KEY environment variable is required');
   }
   return new Ably.Rest({ key: apiKey });
 };

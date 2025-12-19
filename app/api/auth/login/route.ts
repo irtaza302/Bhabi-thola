@@ -12,7 +12,23 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing username or password' }, { status: 400 });
         }
 
-        const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
+        let user;
+        try {
+            [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
+        } catch (dbError: any) {
+            console.error('Database query error:', dbError);
+            // Check if it's a table doesn't exist error
+            if (dbError.message?.includes('does not exist') || dbError.message?.includes('relation')) {
+                return NextResponse.json({ 
+                    error: 'Database tables not found. Please run migrations.',
+                    details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+                }, { status: 500 });
+            }
+            return NextResponse.json({ 
+                error: 'Database connection error',
+                details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+            }, { status: 500 });
+        }
 
         if (!user || !(await comparePassword(password, user.password))) {
             return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
@@ -34,6 +50,12 @@ export async function POST(request: Request) {
         return response;
     } catch (error: any) {
         console.error('Login error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        const errorMessage = process.env.NODE_ENV === 'development' 
+            ? error.message || 'Internal server error'
+            : 'Internal server error';
+        return NextResponse.json({ 
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        }, { status: 500 });
     }
 }
