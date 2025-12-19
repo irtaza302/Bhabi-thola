@@ -6,7 +6,18 @@ import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request) {
     try {
-        const { username, password } = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (parseError: any) {
+            console.error('Login route: Failed to parse request body', parseError);
+            return NextResponse.json({ 
+                error: 'Invalid request body',
+                message: 'Failed to parse request data'
+            }, { status: 400 });
+        }
+
+        const { username, password } = body;
 
         if (!username || !password) {
             return NextResponse.json({ error: 'Missing username or password' }, { status: 400 });
@@ -30,7 +41,14 @@ export async function POST(request: Request) {
             }, { status: 500 });
         }
 
-        if (!user || !(await comparePassword(password, user.password))) {
+        if (!user) {
+            console.error('Login failed: User not found', { username });
+            return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
+        }
+
+        const passwordMatch = await comparePassword(password, user.password);
+        if (!passwordMatch) {
+            console.error('Login failed: Password mismatch', { username, userId: user.id });
             return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
         }
 

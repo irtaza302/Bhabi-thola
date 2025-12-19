@@ -17,16 +17,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError: any) {
+      console.error('Join route: Failed to parse request body', parseError);
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { playerId, name } = body;
 
     if (!playerId || !name) {
+      console.error('Join route: Missing required fields', { playerId: !!playerId, name: !!name });
       return NextResponse.json({ error: 'playerId and name are required' }, { status: 400 });
     }
 
     const result = await handleJoin(playerId, name, payload.id);
 
     if (!result.success) {
+      console.error('Join failed:', { 
+        playerId, 
+        name, 
+        userId: payload.id, 
+        error: result.error 
+      });
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
