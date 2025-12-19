@@ -1,4 +1,4 @@
-# Bhabi Thola
+# Bhabi Thola 
 
 A multiplayer card game built with Next.js and Ably for real-time communication. Fully compatible with Vercel deployment.
 
