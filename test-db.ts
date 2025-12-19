@@ -5,6 +5,8 @@ async function test() {
     try {
         console.log('Inserting test user...');
         await db.insert(users).values({
+            username: `testuser-${Date.now()}`,
+            password: 'test-password-123',
             name: 'Test User',
             email: `test-${Date.now()}@example.com`,
         });

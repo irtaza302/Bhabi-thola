@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { useEffect, useState, useRef } from 'react';
+import Ably from 'ably';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, Card as CardType, Player, isValidMove } from '../../lib/game';
 import Card from '../../components/Card';
@@ -23,15 +23,13 @@ interface EmojiReaction {
     emoji: string;
 }
 
-let socket: Socket;
-
 export default function GamePage() {
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [name, setName] = useState('');
     const [joined, setJoined] = useState(false);
     const [error, setError] = useState('');
     const [connected, setConnected] = useState(false);
-    const [socketId, setSocketId] = useState<string>('');
+    const [playerId, setPlayerId] = useState<string>('');
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
     const [showDebug, setShowDebug] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -42,6 +40,8 @@ export default function GamePage() {
     const [visibleMessages, setVisibleMessages] = useState<ChatMessage[]>([]);
     const [user, setUser] = useState<{ id: string, username: string, name: string, gamesPlayed: number, gamesWon: number } | null>(null);
     const [isAuthenticating, setIsAuthenticating] = useState(true);
+    const ablyClientRef = useRef<Ably.Realtime | null>(null);
+    const channelRef = useRef<Ably.RealtimeChannel | null>(null);
 
     const addDebugLog = (message: string) => {
         const timestamp = new Date().toLocaleTimeString();
@@ -51,14 +51,92 @@ export default function GamePage() {
     };
 
     useEffect(() => {
-        // Build session check
-        const checkSession = async () => {
+        // Build session check and initialize Ably
+        const initialize = async () => {
             try {
                 const res = await fetch('/api/auth/me');
                 if (res.ok) {
                     const data = await res.json();
                     setUser(data.user);
                     setName(data.user.name);
+                    
+                    // Generate unique player ID
+                    const generatedPlayerId = `${data.user.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    setPlayerId(generatedPlayerId);
+                    
+                    // Get Ably token
+                    try {
+                        const tokenRes = await fetch('/api/ably/token');
+                        if (tokenRes.ok) {
+                            const tokenData = await tokenRes.json();
+                            
+                            // Initialize Ably client with token
+                            const ably = new Ably.Realtime({
+                                token: tokenData.token,
+                                clientId: data.user.id,
+                            });
+                            
+                            ablyClientRef.current = ably;
+                            
+                            ably.connection.on('connected', () => {
+                                addDebugLog(`✅ Connected to Ably`);
+                                setConnected(true);
+                            });
+                            
+                            ably.connection.on('disconnected', () => {
+                                addDebugLog(`❌ Disconnected from Ably`);
+                                setConnected(false);
+                            });
+                            
+                            ably.connection.on('failed', (stateChange) => {
+                                addDebugLog(`🔥 Connection failed: ${stateChange.reason}`);
+                                setError(`Connection failed: ${stateChange.reason}`);
+                            });
+                            
+                            // Subscribe to game channel
+                            const channel = ably.channels.get('game:main');
+                            channelRef.current = channel;
+                            
+                            // Subscribe to game state updates
+                            channel.subscribe('gameState', (message) => {
+                                const state = message.data as GameState;
+                                addDebugLog(`📊 Game state updated: ${state.status}, ${state.players.length} players`);
+                                setGameState(state);
+                            });
+                            
+                            // Subscribe to chat messages
+                            channel.subscribe('chatMessage', (message) => {
+                                const msg = message.data as ChatMessage;
+                                setMessages(prev => [...prev.slice(-49), msg]);
+                                
+                                // Add to visible bubbles
+                                setVisibleMessages(prev => [...prev, msg]);
+                                setTimeout(() => {
+                                    setVisibleMessages(prev => prev.filter(m => m.id !== msg.id));
+                                }, 3000);
+                            });
+                            
+                            // Subscribe to emoji reactions
+                            channel.subscribe('emojiReaction', (message) => {
+                                const reaction = message.data as EmojiReaction;
+                                const id = Math.random().toString(36).substr(2, 9);
+                                const newReaction = { ...reaction, id };
+                                setActiveEmojis(prev => [...prev, newReaction]);
+                                setTimeout(() => {
+                                    setActiveEmojis(prev => prev.filter(e => e.id !== id));
+                                }, 3000);
+                            });
+                            
+                            addDebugLog(`Attempting to connect to Ably...`);
+                        } else {
+                            const errorData = await tokenRes.json().catch(() => ({}));
+                            throw new Error(errorData.error || 'Failed to get Ably token');
+                        }
+                    } catch (err: any) {
+                        console.error('Ably initialization failed:', err);
+                        addDebugLog(`🔥 Failed to initialize Ably: ${err.message || err}`);
+                        setError(`Failed to connect: ${err.message || err}`);
+                    }
                 }
             } catch (err) {
                 console.error('Session check failed', err);
@@ -66,108 +144,106 @@ export default function GamePage() {
                 setIsAuthenticating(false);
             }
         };
-        checkSession();
-
-        // Use current hostname so it works on localhost and network IP
-        const socketUrl = typeof window !== 'undefined'
-            ? `http://${window.location.hostname}:3001`
-            : 'http://localhost:3001';
-
-        addDebugLog(`Attempting to connect to: ${socketUrl}`);
-        socket = io(socketUrl, {
-            transports: ['websocket', 'polling'],
-            timeout: 5000,
-            forceNew: true
-        });
-
-        socket.on('connect', () => {
-            addDebugLog(`✅ Connected to server with ID: ${socket.id}`);
-            setConnected(true);
-            setSocketId(socket.id || '');
-        });
-
-        socket.on('disconnect', (reason) => {
-            addDebugLog(`❌ Disconnected from server. Reason: ${reason}`);
-            setConnected(false);
-            setSocketId('');
-        });
-
-        socket.on('connect_error', (error) => {
-            addDebugLog(`🔥 Connection error: ${error.message}`);
-            setError(`Connection failed: ${error.message}`);
-        });
-
-        socket.on('gameState', (state: GameState) => {
-            addDebugLog(`📊 Game state updated: ${state.status}, ${state.players.length} players`);
-            setGameState(state);
-        });
-
-        socket.on('chatMessage', (msg: ChatMessage) => {
-            setMessages(prev => [...prev.slice(-49), msg]);
-
-            // Add to visible bubbles
-            setVisibleMessages(prev => [...prev, msg]);
-            setTimeout(() => {
-                setVisibleMessages(prev => prev.filter(m => m.id !== msg.id));
-            }, 3000);
-
-            if (!showChat) {
-                // Peek chat if it's closed
-            }
-        });
-
-        socket.on('emojiReaction', (reaction: EmojiReaction) => {
-            const id = Math.random().toString(36).substr(2, 9);
-            const newReaction = { ...reaction, id };
-            setActiveEmojis(prev => [...prev, newReaction]);
-            setTimeout(() => {
-                setActiveEmojis(prev => prev.filter(e => e.id !== id));
-            }, 3000);
-        });
-
-        // Ping test
-        const pingInterval = setInterval(() => {
-            if (socket.connected) {
-                const start = Date.now();
-                socket.emit('ping', start, (response: number) => {
-                    const latency = Date.now() - response;
-                    addDebugLog(`🏓 Ping: ${latency}ms`);
-                });
-            }
-        }, 10000); // Every 10 seconds
+        
+        initialize();
 
         return () => {
-            clearInterval(pingInterval);
-            socket.disconnect();
+            if (channelRef.current) {
+                channelRef.current.unsubscribe();
+            }
+            if (ablyClientRef.current) {
+                ablyClientRef.current.close();
+            }
         };
     }, []);
 
-    const joinGame = () => {
-        if (!user) return;
+    const joinGame = async () => {
+        if (!user || !playerId) return;
         addDebugLog(`🚀 Attempting to join game: ${user.name} (${user.id})`);
-        socket.emit('join', { name: user.name, userId: user.id });
-        setJoined(true);
+        try {
+            const res = await fetch('/api/game/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId, name: user.name }),
+            });
+            if (res.ok) {
+                setJoined(true);
+            } else {
+                const data = await res.json();
+                setError(data.error || 'Failed to join game');
+            }
+        } catch (err) {
+            console.error('Join game error:', err);
+            setError('Failed to join game');
+        }
     };
 
-    const startGame = () => {
+    const startGame = async () => {
+        if (!playerId) return;
         addDebugLog('🎮 Starting game...');
-        socket.emit('startGame');
+        try {
+            const res = await fetch('/api/game/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.error || 'Failed to start game');
+            }
+        } catch (err) {
+            console.error('Start game error:', err);
+            setError('Failed to start game');
+        }
     };
 
-    const playCard = (card: CardType) => {
+    const playCard = async (card: CardType) => {
+        if (!playerId) return;
         addDebugLog(`🃏 Playing card: ${card.rank} of ${card.suit}`);
-        socket.emit('playCard', card);
+        try {
+            const res = await fetch('/api/game/play', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId, card }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.error || 'Failed to play card');
+            }
+        } catch (err) {
+            console.error('Play card error:', err);
+            setError('Failed to play card');
+        }
     };
 
-    const sendMessage = () => {
-        if (!messageInput.trim()) return;
-        socket.emit('sendMessage', messageInput);
-        setMessageInput('');
+    const sendMessage = async () => {
+        if (!messageInput.trim() || !playerId) return;
+        try {
+            const res = await fetch('/api/game/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId, text: messageInput }),
+            });
+            if (res.ok) {
+                setMessageInput('');
+            }
+        } catch (err) {
+            console.error('Send message error:', err);
+        }
     };
 
-    const sendEmoji = (emoji: string) => {
-        socket.emit('sendEmoji', emoji);
-        setShowEmojiPicker(false);
+    const sendEmoji = async (emoji: string) => {
+        if (!playerId) return;
+        try {
+            await fetch('/api/game/emoji', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId, emoji }),
+            });
+            setShowEmojiPicker(false);
+        } catch (err) {
+            console.error('Send emoji error:', err);
+        }
     };
 
     if (isAuthenticating) {
@@ -264,9 +340,9 @@ export default function GamePage() {
 
     if (!gameState) return <div className="p-10 text-white">Connecting...</div>;
 
-    const me = gameState.players.find(p => p.id === socket.id);
-    const isMyTurn = gameState.currentTurn === socket.id;
-    const others = gameState.players.filter(p => p.id !== socket.id);
+    const me = gameState.players.find(p => p.id === playerId);
+    const isMyTurn = gameState.currentTurn === playerId;
+    const others = gameState.players.filter(p => p.id !== playerId);
 
     return (
         <div className="relative h-screen w-full flex flex-col overflow-hidden">
@@ -324,10 +400,10 @@ export default function GamePage() {
                     </div>
                     <div className="mt-3 pt-3 border-t border-white/20">
                         <div className="text-xs text-gray-400">
-                            <div>Socket ID: {socketId || 'Not connected'}</div>
+                            <div>Player ID: {playerId || 'Not connected'}</div>
                             <div>Status: {gameState?.status || 'Unknown'}</div>
                             <div>Players: {gameState?.players.length || 0}</div>
-                            <div>URL: {typeof window !== 'undefined' ? `${window.location.hostname}:3001` : 'Unknown'}</div>
+                            <div>Connection: {connected ? 'Ably Connected' : 'Disconnected'}</div>
                         </div>
                     </div>
                 </div>
@@ -358,7 +434,7 @@ export default function GamePage() {
                                     {p.name[0].toUpperCase()}
                                 </div>
                                 <div className="font-black truncate text-white text-sm md:text-base tracking-tight mb-1">{p.name}</div>
-                                {p.id === socket.id ? (
+                                {p.id === playerId ? (
                                     <div className="text-[10px] font-bold text-green-400 uppercase tracking-widest">You</div>
                                 ) : (
                                     <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest italic">Guest</div>
@@ -368,7 +444,7 @@ export default function GamePage() {
                     </div>
 
 
-                    {gameState.players.length >= 2 && gameState.players[0].id === socket.id && (
+                    {gameState.players.length >= 2 && gameState.players[0].id === playerId && (
                         <motion.button
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -388,7 +464,7 @@ export default function GamePage() {
                         </div>
                     )}
 
-                    {gameState.players.length >= 2 && gameState.players[0].id !== socket.id && (
+                    {gameState.players.length >= 2 && gameState.players[0].id !== playerId && (
                         <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 px-6 py-2 rounded-full border border-white/5">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" />
                             Host is preparing...
@@ -516,7 +592,7 @@ export default function GamePage() {
                     <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center bg-gradient-to-t from-black/80 to-transparent">
                         <div className="relative mb-2">
                             <AnimatePresence>
-                                {visibleMessages.filter(m => m.senderId === socket.id).map((m) => (
+                                {visibleMessages.filter(m => m.senderId === playerId).map((m) => (
                                     <motion.div
                                         key={m.id}
                                         initial={{ opacity: 0, y: 10, scale: 0.8 }}
@@ -532,7 +608,7 @@ export default function GamePage() {
                             </AnimatePresence>
 
                             <AnimatePresence>
-                                {activeEmojis.filter(e => e.senderId === socket.id).map((e) => (
+                                {activeEmojis.filter(e => e.senderId === playerId).map((e) => (
                                     <motion.div
                                         key={e.id}
                                         initial={{ y: 0, opacity: 0, scale: 0.5 }}
@@ -698,12 +774,12 @@ export default function GamePage() {
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {messages.map((msg) => (
-                                <div key={msg.id} className={`flex flex-col ${msg.senderId === socket.id ? 'items-end' : 'items-start'}`}>
+                                <div key={msg.id} className={`flex flex-col ${msg.senderId === playerId ? 'items-end' : 'items-start'}`}>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-[10px] text-white/50">{msg.timestamp}</span>
-                                        <span className="text-xs font-bold text-gray-300">{msg.senderId === socket.id ? 'You' : msg.sender}</span>
+                                        <span className="text-xs font-bold text-gray-300">{msg.senderId === playerId ? 'You' : msg.sender}</span>
                                     </div>
-                                    <div className={`px-3 py-2 rounded-2xl max-w-[90%] text-sm ${msg.senderId === socket.id
+                                    <div className={`px-3 py-2 rounded-2xl max-w-[90%] text-sm ${msg.senderId === playerId
                                         ? 'bg-blue-600 text-white rounded-tr-none'
                                         : 'glass text-gray-100 rounded-tl-none'
                                         }`}>

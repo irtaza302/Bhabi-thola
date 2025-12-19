@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, integer, jsonb } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -14,5 +14,12 @@ export const users = pgTable('users', {
 export const games = pgTable('games', {
     id: uuid('id').defaultRandom().primaryKey(),
     status: text('status').notNull().default('waiting'), // waiting, in_progress, completed
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const gameSessions = pgTable('game_sessions', {
+    id: text('id').primaryKey(), // Using text to allow fixed session ID like "main-game-session"
+    gameState: jsonb('game_state').notNull(), // Stores the full GameState object
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });

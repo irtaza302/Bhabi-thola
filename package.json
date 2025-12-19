@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "server": "tsx server.ts",
-    "dev:full": "concurrently \"pnpm run dev\" \"pnpm run server\""
+    "lint": "eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -39,6 +37,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "ably": "^2.15.0",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.4.7",
     "canvas-confetti": "^1.9.4",
@@ -61,8 +60,6 @@
     "react-hook-form": "^7.68.0",
     "react-resizable-panels": "^4.0.8",
     "recharts": "2.15.4",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "vaul": "^1.1.2",
