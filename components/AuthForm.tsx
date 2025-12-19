@@ -57,24 +57,24 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass p-8 relative overflow-hidden"
+                className="glass p-10 relative overflow-hidden backdrop-blur-2xl border-white/10"
             >
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    {isLogin ? <LogIn size={80} /> : <UserPlus size={80} />}
+                <div className="absolute top-0 right-0 p-6 opacity-[0.05] text-white">
+                    {isLogin ? <LogIn size={100} /> : <UserPlus size={100} />}
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
                     {isLogin ? 'Welcome Back' : 'Create Account'}
                 </h2>
-                <p className="text-gray-400 mb-8">
-                    {isLogin ? 'Sign in to play Bhabi Thola' : 'Join the game and track your wins'}
+                <p className="text-gray-400 mb-10 text-sm">
+                    {isLogin ? 'Sign in to jump into the action.' : 'Join the game and start your winning streak.'}
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {!isLogin && (
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <div className="space-y-5">
+                            <div className="relative group">
+                                <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-green-400 transition-colors" size={18} />
                                 <input
                                     type="text"
                                     name="name"
@@ -82,25 +82,25 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                                     required
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 ring-green-500 text-white transition-all"
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 ring-green-500/50 focus:bg-white/10 text-white transition-all placeholder:text-gray-600"
                                 />
                             </div>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <div className="relative group">
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-green-400 transition-colors" size={18} />
                                 <input
                                     type="email"
                                     name="email"
                                     placeholder="Email (Optional)"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 ring-green-500 text-white transition-all"
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 ring-green-500/50 focus:bg-white/10 text-white transition-all placeholder:text-gray-600"
                                 />
                             </div>
                         </div>
                     )}
 
-                    <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <div className="relative group">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-green-400 transition-colors" size={18} />
                         <input
                             type="text"
                             name="username"
@@ -108,12 +108,12 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                             required
                             value={formData.username}
                             onChange={handleChange}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 ring-green-500 text-white transition-all"
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 ring-green-500/50 focus:bg-white/10 text-white transition-all placeholder:text-gray-600"
                         />
                     </div>
 
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <div className="relative group">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-green-400 transition-colors" size={18} />
                         <input
                             type="password"
                             name="password"
@@ -121,17 +121,17 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                             required
                             value={formData.password}
                             onChange={handleChange}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 ring-green-500 text-white transition-all"
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 outline-none focus:ring-2 ring-green-500/50 focus:bg-white/10 text-white transition-all placeholder:text-gray-600"
                         />
                     </div>
 
                     <AnimatePresence>
                         {error && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="text-red-400 text-sm bg-red-400/10 p-3 rounded-lg border border-red-400/20"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="text-red-400 text-xs bg-red-400/10 p-4 rounded-xl border border-red-400/20 font-medium"
                             >
                                 {error}
                             </motion.div>
@@ -141,24 +141,25 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-green-600 hover:bg-green-500 disabled:bg-gray-700 py-4 rounded-xl text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-900/40"
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 disabled:from-gray-700 disabled:to-gray-800 py-4 rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-green-900/40 active:scale-[0.98]"
                     >
                         {isLoading ? (
                             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
-                                {isLogin ? 'Login' : 'Sign Up'} <ArrowRight size={18} />
+                                <span className="uppercase tracking-wider">{isLogin ? 'Enter Game' : 'Join Arena'}</span>
+                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </>
                         )}
                     </button>
                 </form>
 
-                <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                <div className="mt-10 pt-8 border-t border-white/5 text-center">
                     <button
                         onClick={() => setIsLogin(!isLogin)}
-                        className="text-gray-400 hover:text-white transition-colors text-sm"
+                        className="text-gray-500 hover:text-green-400 transition-colors text-sm font-medium"
                     >
-                        {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                        {isLogin ? "New player? Register here" : "Frequent player? Login here"}
                     </button>
                 </div>
             </motion.div>

@@ -27,34 +27,44 @@ const Card: React.FC<CardProps> = ({ card, onClick, disabled, isTable, isLegal }
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{
-                opacity: disabled ? 0.6 : 1,
-                y: 0
+                opacity: disabled ? 0.4 : 1,
+                scale: 1,
+                y: 0,
             }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            whileHover={!disabled ? { y: -10, scale: 1.05 } : {}}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={!disabled && (isLegal || isLegal === undefined) ? onClick : undefined}
             className={`card ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} ${isTable ? 'table-card' : 'hand-card'} ${isLegal ? 'legal-move' : ''}`}
             style={{ zIndex: isTable ? 10 : 1 }}
         >
-            <div className={`card-inner ${suitClass} relative flex flex-col justify-between ${disabled ? 'border-gray-400' : 'border-gray-200'} ${isLegal ? 'is-legal' : ''}`}>
-                <div className={`card-corner-top ${suitClass}`}>
-                    <span className={`card-rank ${isRed ? 'text-red-600' : isBlack ? 'text-black' : ''}`}>{card.rank}</span>
-                    <span className={`card-suit ${suitClass}`}>{suitSymbols[card.suit]}</span>
+            <div className={`card-inner ${suitClass} relative flex flex-col justify-between overflow-hidden ${disabled ? 'grayscale' : ''} ${isLegal ? 'border-primary shadow-[0_0_15px_rgba(101,255,160,0.3)]' : 'border-white/10'}`}>
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+
+                {/* Holographic sweep for legal moves */}
+                {isLegal && (
+                    <motion.div
+                        animate={{ x: ['-200%', '200%'] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none"
+                    />
+                )}
+
+                <div className={`card-corner-top ${suitClass} z-10`}>
+                    <span className={`card-rank font-black text-lg ${isRed ? 'text-red-600' : isBlack ? 'text-gray-900' : ''}`}>{card.rank}</span>
+                    <span className={`card-suit text-xl ${suitClass}`}>{suitSymbols[card.suit]}</span>
                 </div>
 
-                <div className={`card-center ${suitClass}`}>
+                <div className={`card-center ${suitClass} z-10 select-none opacity-20`}>
                     {suitSymbols[card.suit]}
                 </div>
 
-                <div className={`card-corner-bottom ${suitClass}`}>
-                    <span className={`card-rank ${isRed ? 'text-red-600' : isBlack ? 'text-black' : ''}`}>{card.rank}</span>
-                    <span className={`card-suit ${suitClass}`}>{suitSymbols[card.suit]}</span>
+                <div className={`card-corner-bottom ${suitClass} z-10`}>
+                    <span className={`card-rank font-black text-lg ${isRed ? 'text-red-600' : isBlack ? 'text-gray-900' : ''}`}>{card.rank}</span>
+                    <span className={`card-suit text-xl ${suitClass}`}>{suitSymbols[card.suit]}</span>
                 </div>
-
-                {isLegal && (
-                    <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
-                )}
             </div>
         </motion.div>
     );

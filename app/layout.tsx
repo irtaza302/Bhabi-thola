@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: "Play Bhabi Thola with friends on the same network!",
 };
 
+import BackgroundEffect from "@/components/BackgroundEffect";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,8 +21,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} antialiased`}>
-        {children}
+      <body className={`${outfit.variable} antialiased relative min-h-screen`}>
+        <BackgroundEffect />
+        <div className="relative z-10 w-full h-full">
+          {children}
+        </div>
       </body>
     </html>
   );

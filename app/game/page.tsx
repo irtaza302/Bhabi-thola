@@ -192,67 +192,71 @@ export default function GamePage() {
 
     if (!joined) {
         return (
-            <div className="flex flex-col items-center justify-center h-screen bg-black/50 px-4">
+            <div className="flex flex-col items-center justify-center h-screen bg-transparent px-4">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="glass p-6 md:p-8 w-full max-w-md text-center"
+                    className="glass p-10 w-full max-w-md text-center border-white/10 relative overflow-hidden"
                 >
+                    <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
+                        <Trophy size={120} className="text-white" />
+                    </div>
+
                     <div className="absolute top-4 right-4 flex gap-2">
                         <button
                             onClick={() => {
                                 document.cookie = 'token=; Max-Age=0; path=/;';
                                 setUser(null);
                             }}
-                            className="p-2 hover:bg-white/10 rounded-full text-red-400 transition-colors"
+                            className="p-2 hover:bg-white/10 rounded-full text-red-400/60 hover:text-red-400 transition-colors z-10"
                             title="Logout"
                         >
-                            <LogOut size={18} />
+                            <LogOut size={20} />
                         </button>
                     </div>
 
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white shadow-xl">
+                    <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl mx-auto mb-6 flex items-center justify-center text-4xl font-black text-white shadow-2xl rotate-3">
                         {user.name[0].toUpperCase()}
                     </div>
 
-                    <h1 className="text-2xl font-bold text-white mb-1">{user.name}</h1>
-                    <p className="text-gray-400 mb-6 font-mono text-sm">@{user.username}</p>
+                    <h1 className="text-3xl font-black text-white mb-1 tracking-tight">{user.name}</h1>
+                    <p className="text-green-400/60 mb-8 font-mono text-sm tracking-wider uppercase">@{user.username}</p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                            <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Played</div>
-                            <div className="text-xl font-bold text-white">{user.gamesPlayed || 0}</div>
+                    <div className="grid grid-cols-2 gap-4 mb-10">
+                        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 group hover:border-white/10 transition-colors">
+                            <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-1 font-bold">Games</div>
+                            <div className="text-2xl font-black text-white">{user.gamesPlayed || 0}</div>
                         </div>
-                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                            <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Won</div>
-                            <div className="text-xl font-bold text-green-400">{user.gamesWon || 0}</div>
+                        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 group hover:border-white/10 transition-colors">
+                            <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-1 font-bold">Wins</div>
+                            <div className="text-2xl font-black text-green-400">{user.gamesWon || 0}</div>
                         </div>
                     </div>
 
-                    <p className="text-gray-300 mb-6 text-sm">Ready to join the round?</p>
-
                     {/* Connection Status */}
-                    <div className="mb-6 flex items-center justify-center gap-2 text-xs md:text-sm">
+                    <div className="mb-8 flex items-center justify-center gap-3">
                         {connected ? (
-                            <>
-                                <Wifi size={14} className="text-green-400 md:w-4 md:h-4" />
-                                <span className="text-green-400">Connected</span>
-                            </>
+                            <div className="flex items-center gap-2 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Connect Ready</span>
+                            </div>
                         ) : (
-                            <>
-                                <WifiOff size={14} className="text-red-400 md:w-4 md:h-4" />
-                                <span className="text-red-400">Connecting...</span>
-                            </>
+                            <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
+                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Connecting...</span>
+                            </div>
                         )}
                     </div>
 
                     <button
                         onClick={joinGame}
                         disabled={!connected}
-                        className="w-full bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-green-900/40 text-lg"
+                        className="w-full bg-white text-black hover:bg-green-400 hover:text-black disabled:bg-gray-800 disabled:text-gray-500 font-black py-4 rounded-2xl transition-all shadow-2xl text-lg uppercase tracking-widest active:scale-[0.98]"
                     >
-                        {connected ? 'JOIN ROOM' : 'CONNECTING...'}
+                        {connected ? 'Enter Arena' : 'Waiting...'}
                     </button>
+
+                    <p className="mt-6 text-gray-500 text-[10px] uppercase tracking-widest font-bold">Bhabi Thola v0.1.0-alpha</p>
                 </motion.div>
             </div>
         );
@@ -267,25 +271,33 @@ export default function GamePage() {
     return (
         <div className="relative h-screen w-full flex flex-col overflow-hidden">
             {/* Header Info */}
-            <div className="absolute top-2 md:top-4 left-2 md:left-4 flex flex-wrap gap-2 md:gap-4 z-50 max-w-full">
-                <div className="glass px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-                    <Users size={14} className="md:w-[18px] md:h-[18px]" />
-                    <span>{gameState.players.length}/8 Players</span>
+            <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-50">
+                <div className="flex gap-3">
+                    <div className="glass px-4 py-2 flex items-center gap-2 text-sm font-medium border-white/5">
+                        <Users size={18} className="text-blue-400" />
+                        <span className="text-white/90">{gameState.players.length}/8 <span className="text-white/40 font-normal">Players</span></span>
+                    </div>
+                    <div className="hidden md:flex glass px-4 py-2 items-center gap-2 text-sm font-medium border-white/5">
+                        <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`} />
+                        <span className="text-white/90">{connected ? 'Live Server' : 'Offline'}</span>
+                    </div>
                 </div>
-                <div className="glass px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-1 md:gap-2 text-yellow-400 text-xs md:text-sm">
-                    <MessageCircle size={14} className="md:w-[18px] md:h-[18px]" />
-                    <span className="max-w-[150px] md:max-w-[300px] truncate">{gameState.message}</span>
+
+                <div className="flex-1 max-w-md mx-4">
+                    <div className="glass px-4 py-2 flex items-center justify-center gap-2 text-yellow-400 text-sm font-bold border-yellow-500/10">
+                        <MessageCircle size={18} className="animate-pulse" />
+                        <span className="truncate">{gameState.message}</span>
+                    </div>
                 </div>
-                <div className={`glass px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-1 md:gap-2 text-xs ${connected ? 'text-green-400' : 'text-red-400'}`}>
-                    {connected ? <Wifi size={14} className="md:w-[18px] md:h-[18px]" /> : <WifiOff size={14} className="md:w-[18px] md:h-[18px]" />}
-                    <span className="hidden md:inline">{connected ? 'Connected' : 'Disconnected'}</span>
+
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowDebug(!showDebug)}
+                        className={`glass px-4 py-2 text-sm font-medium transition-all ${showDebug ? 'bg-blue-500/20 text-blue-300' : 'text-white/60 hover:text-white border-white/5'}`}
+                    >
+                        Debug
+                    </button>
                 </div>
-                <button
-                    onClick={() => setShowDebug(!showDebug)}
-                    className="glass px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-blue-400 hover:text-blue-300"
-                >
-                    Debug
-                </button>
             </div>
 
             {/* Debug Panel */}
@@ -323,19 +335,34 @@ export default function GamePage() {
 
             {/* Lobby State */}
             {gameState.status === 'LOBBY' && (
-                <div className="flex-1 flex flex-col items-center justify-center gap-6 md:gap-8 px-4">
-                    <div className="flex gap-3 md:gap-4 flex-wrap justify-center">
-                        {gameState.players.map((p: Player) => (
+                <div className="flex-1 flex flex-col items-center justify-center gap-8 md:gap-12 px-4 relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center mb-4"
+                    >
+                        <h2 className="text-sm font-black text-green-400 uppercase tracking-[0.4em] mb-2">Waiting Area</h2>
+                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">THE LOBBY</h1>
+                    </motion.div>
+
+                    <div className="flex gap-4 md:gap-6 flex-wrap justify-center max-w-4xl">
+                        {gameState.players.map((p: Player, idx: number) => (
                             <motion.div
                                 key={p.id}
-                                layout
-                                className="glass p-4 md:p-6 text-center w-24 md:w-32 relative"
+                                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="glass p-6 text-center w-32 md:w-40 border-white/5 relative group hover:border-white/20 transition-all hover:-translate-y-2"
                             >
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center text-xl md:text-2xl font-bold text-white">
+                                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-gray-700 to-black rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-2xl group-hover:rotate-3 transition-transform">
                                     {p.name[0].toUpperCase()}
                                 </div>
-                                <div className="font-bold truncate text-white text-sm md:text-base">{p.name}</div>
-                                {p.id === socket.id && <div className="text-xs text-green-400 mt-1">(You)</div>}
+                                <div className="font-black truncate text-white text-sm md:text-base tracking-tight mb-1">{p.name}</div>
+                                {p.id === socket.id ? (
+                                    <div className="text-[10px] font-bold text-green-400 uppercase tracking-widest">You</div>
+                                ) : (
+                                    <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest italic">Guest</div>
+                                )}
                             </motion.div>
                         ))}
                     </div>
@@ -348,21 +375,23 @@ export default function GamePage() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={startGame}
-                            className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-6 md:px-10 py-3 md:py-4 rounded-full flex items-center gap-2 shadow-xl transition-all text-sm md:text-base"
+                            className="bg-white text-black font-black px-10 md:px-14 py-4 md:py-5 rounded-2xl flex items-center gap-3 shadow-[0_20px_50px_rgba(255,255,255,0.1)] transition-all text-sm md:text-base uppercase tracking-widest hover:bg-green-400"
                         >
-                            <Play fill="currentColor" size={18} className="md:w-5 md:h-5" /> START GAME
+                            <Play fill="currentColor" size={20} /> Start Match
                         </motion.button>
                     )}
 
                     {gameState.players.length < 2 && (
-                        <div className="text-white/60 text-sm">
-                            Waiting for more players... ({gameState.players.length}/2 minimum, max 8)
+                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 px-6 py-2 rounded-full border border-white/5">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                            Waiting for players ({gameState.players.length}/2)
                         </div>
                     )}
 
                     {gameState.players.length >= 2 && gameState.players[0].id !== socket.id && (
-                        <div className="text-white/60 text-sm">
-                            Waiting for {gameState.players[0].name} to start the game...
+                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 px-6 py-2 rounded-full border border-white/5">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" />
+                            Host is preparing...
                         </div>
                     )}
                 </div>
@@ -372,68 +401,108 @@ export default function GamePage() {
             {gameState.status === 'PLAYING' && (
                 <div className="flex-1 relative">
                     {/* Other Players */}
-                    <div className="absolute top-16 md:top-20 left-1/2 -translate-x-1/2 flex gap-4 md:gap-10 z-40">
+                    <div className="absolute top-24 left-1/2 -translate-x-1/2 flex gap-6 md:gap-12 z-40">
                         {others.map((p: Player) => (
-                            <div key={p.id} className={`flex flex-col items-center gap-1 md:gap-2 transition-all relative ${gameState.currentTurn === p.id ? 'scale-110' : 'opacity-70'}`}>
-                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 ${gameState.currentTurn === p.id ? 'border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'border-white/20'} flex items-center justify-center bg-gray-800 text-base md:text-lg font-bold text-white relative`}>
-                                    {p.name[0]}
-                                    {/* Chat Bubbles for others */}
-                                    <AnimatePresence>
-                                        {visibleMessages.filter(m => m.senderId === p.id).map((m) => (
-                                            <motion.div
-                                                key={m.id}
-                                                initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                                                animate={{ opacity: 1, y: -40, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.8 }}
-                                                className="absolute bottom-full mb-2 z-50 pointer-events-none"
-                                            >
-                                                <div className="bg-white text-black px-3 py-1.5 rounded-2xl rounded-bl-none shadow-xl text-[11px] font-medium whitespace-nowrap border border-gray-200 min-w-[60px] max-w-[150px] truncate text-center">
-                                                    {m.text}
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </AnimatePresence>
+                            <div key={p.id} className={`flex flex-col items-center gap-2 transition-all relative ${gameState.currentTurn === p.id ? 'scale-110' : 'opacity-80'}`}>
+                                <div className="relative">
+                                    <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full border-2 ${gameState.currentTurn === p.id ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.4)]' : 'border-white/10'} flex items-center justify-center bg-gradient-to-br from-gray-800 to-black text-lg md:text-xl font-black text-white overflow-visible transition-shadow`}>
+                                        {p.name[0].toUpperCase()}
 
-                                    {/* Emojis for this player */}
-                                    <AnimatePresence>
-                                        {activeEmojis.filter(e => e.senderId === p.id).map((e) => (
+                                        {/* Turn Indicator Ring */}
+                                        {gameState.currentTurn === p.id && (
                                             <motion.div
-                                                key={e.id}
-                                                initial={{ y: 0, opacity: 0, scale: 0.5 }}
-                                                animate={{ y: -60, opacity: 1, scale: 1.5 }}
-                                                exit={{ y: -100, opacity: 0 }}
-                                                className="absolute pointer-events-none text-2xl z-[60]"
-                                            >
-                                                {e.emoji}
-                                            </motion.div>
-                                        ))}
-                                    </AnimatePresence>
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                                className="absolute -inset-1 border-t-2 border-yellow-400 rounded-full opacity-40"
+                                            />
+                                        )}
+
+                                        {/* Chat Bubbles for others */}
+                                        <AnimatePresence>
+                                            {visibleMessages.filter(m => m.senderId === p.id).map((m) => (
+                                                <motion.div
+                                                    key={m.id}
+                                                    initial={{ opacity: 0, scale: 0.5, y: 10 }}
+                                                    animate={{ opacity: 1, scale: 1, y: -50 }}
+                                                    exit={{ opacity: 0, scale: 0.5 }}
+                                                    className="absolute bottom-full mb-4 z-50 pointer-events-none"
+                                                >
+                                                    <div className="bg-white text-black px-4 py-2 rounded-2xl rounded-bl-none shadow-2xl text-xs font-bold whitespace-nowrap border-b-2 border-gray-200">
+                                                        {m.text}
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </AnimatePresence>
+
+                                        {/* Emojis for this player */}
+                                        <AnimatePresence>
+                                            {activeEmojis.filter(e => e.senderId === p.id).map((e) => (
+                                                <motion.div
+                                                    key={e.id}
+                                                    initial={{ y: 0, opacity: 0, scale: 0.5 }}
+                                                    animate={{ y: -80, opacity: 1, scale: 1.8 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="absolute pointer-events-none text-3xl z-[60]"
+                                                >
+                                                    {e.emoji}
+                                                </motion.div>
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Card Count Badge */}
+                                    <div className="absolute -bottom-1 -right-1 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/20 shadow-lg">
+                                        {p.hand.length}
+                                    </div>
                                 </div>
-                                <div className="text-[10px] md:text-xs font-bold whitespace-nowrap text-white">{p.name}</div>
-                                <div className="text-[8px] md:text-[10px] bg-white/20 px-1.5 md:px-2 rounded-full text-white">{p.hand.length} cards</div>
-                                {p.isOut && <Trophy size={12} className="text-yellow-400 md:w-3.5 md:h-3.5" />}
+
+                                <div className="flex flex-col items-center">
+                                    <div className="text-xs font-black text-white/90 tracking-tight uppercase">{p.name}</div>
+                                    {p.isOut && (
+                                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-yellow-400 font-bold text-[10px]">
+                                            <Trophy size={10} fill="currentColor" /> OUT
+                                        </motion.div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
 
                     {/* Center Table */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-[280px] h-[168px] md:w-[500px] md:h-[300px] border-4 border-white/5 rounded-[140px] md:rounded-[150px] relative">
-                            <div className="absolute inset-0 flex items-center justify-center gap-2 md:gap-4">
-                                <AnimatePresence>
+                        <div className="w-[300px] h-[180px] md:w-[600px] md:h-[350px] border-2 border-white/5 rounded-[150px] md:rounded-[200px] bg-black/5 shadow-[inset_0_0_100px_rgba(0,0,0,0.2)] relative">
+                            {/* Inner Circle Decoration */}
+                            <div className="absolute inset-8 border border-white/5 rounded-[120px] md:rounded-[180px] opacity-20" />
+
+                            <div className="absolute inset-0 flex items-center justify-center gap-4">
+                                <AnimatePresence mode="popLayout">
                                     {gameState.tableCards.map((tc: { playerId: string; card: CardType }, idx: number) => (
-                                        <div key={`${tc.card.rank}-${tc.card.suit}-${idx}`} className="relative transition-transform duration-500" style={{ transform: `rotate(${(idx - (gameState.tableCards.length - 1) / 2) * 10}deg) translateY(-10px)` }}>
+                                        <motion.div
+                                            key={`${tc.card.rank}-${tc.card.suit}-${idx}`}
+                                            initial={{ scale: 0.5, opacity: 0, y: 50, rotate: 0 }}
+                                            animate={{
+                                                scale: 1,
+                                                opacity: 1,
+                                                y: 0,
+                                                rotate: (idx - (gameState.tableCards.length - 1) / 2) * 8
+                                            }}
+                                            className="relative z-10"
+                                        >
                                             <Card card={tc.card} disabled isTable />
-                                            <div className="absolute -top-4 md:-top-6 left-1/2 -translate-x-1/2 text-[8px] md:text-[10px] font-bold text-white/50 whitespace-nowrap">
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-white/40 uppercase tracking-widest whitespace-nowrap"
+                                            >
                                                 {gameState.players.find((p: Player) => p.id === tc.playerId)?.name}
-                                            </div>
-                                        </div>
+                                            </motion.div>
+                                        </motion.div>
                                     ))}
                                 </AnimatePresence>
                             </div>
 
                             {gameState.currentSuit && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 text-[60px] md:text-[120px] font-bold pointer-events-none text-white">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] text-[100px] md:text-[200px] font-black pointer-events-none select-none text-white transition-all">
                                     {gameState.currentSuit === 'S' && '♠'}
                                     {gameState.currentSuit === 'H' && '♥'}
                                     {gameState.currentSuit === 'D' && '♦'}
@@ -525,21 +594,30 @@ export default function GamePage() {
 
             {/* Finished State */}
             {gameState.status === 'FINISHED' && (
-                <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-[100] px-4">
-                    <h1 className="text-4xl md:text-6xl font-black mb-6 md:mb-8 text-white">GAME OVER!</h1>
-                    <div className="text-2xl md:text-4xl text-red-500 font-bold mb-8 md:mb-12 flex flex-col items-center gap-4">
-                        <div className="text-gray-400 uppercase text-xs md:text-sm tracking-[0.5em] md:tracking-[1em]">The Bhabi is</div>
-                        <div className="px-6 md:px-10 py-3 md:py-4 glass border-red-500/50 text-white text-xl md:text-4xl">
-                            {gameState.players.find((p: Player) => !p.isOut)?.name.toUpperCase()}
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="bg-white text-black font-bold px-8 md:px-10 py-3 md:py-4 rounded-full hover:scale-105 transition-all text-sm md:text-base"
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center z-[100] px-4">
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="glass p-12 max-w-lg w-full text-center border-white/10 shadow-[0_0_100px_rgba(255,255,255,0.05)]"
                     >
-                        PLAY AGAIN
-                    </button>
+                        <Trophy size={80} className="text-yellow-400 mx-auto mb-6 drop-shadow-[0_0_20px_rgba(250,204,21,0.4)]" />
+                        <h1 className="text-5xl font-black mb-2 text-white tracking-tighter italic">GAME OVER</h1>
+                        <p className="text-white/40 uppercase tracking-[0.4em] text-[10px] mb-10 font-bold">Session Conclusion</p>
+
+                        <div className="mb-12">
+                            <div className="text-gray-500 uppercase text-[10px] tracking-[0.3em] mb-4 font-black">The Designated Bhabi</div>
+                            <div className="px-8 py-5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-3xl font-black tracking-tight">
+                                {gameState.players.find((p: Player) => !p.isOut)?.name.toUpperCase()}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-white text-black font-black px-12 py-4 rounded-2xl hover:bg-green-400 transition-all text-sm uppercase tracking-widest active:scale-95"
+                        >
+                            New Match
+                        </button>
+                    </motion.div>
                 </div>
             )}
 
@@ -554,20 +632,20 @@ export default function GamePage() {
             )}
 
             {/* Chat & Emojis Toggle */}
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
                 <AnimatePresence>
                     {showEmojiPicker && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                            className="glass p-2 mb-2 flex gap-2 overflow-x-auto max-w-[280px]"
+                            className="glass p-3 mb-2 flex gap-3 overflow-x-auto max-w-[320px] border-white/10 shadow-2xl"
                         >
                             {['😊', '😂', '🔥', '👎', '👍', '🤡', '🎲', '😱', '🥳', '😎'].map(emoji => (
                                 <button
                                     key={emoji}
                                     onClick={() => sendEmoji(emoji)}
-                                    className="text-2xl hover:scale-125 transition-transform"
+                                    className="text-3xl hover:scale-125 transition-transform active:scale-95"
                                 >
                                     {emoji}
                                 </button>
@@ -576,23 +654,26 @@ export default function GamePage() {
                     )}
                 </AnimatePresence>
 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <button
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className={`p-3 rounded-full glass transition-all ${showEmojiPicker ? 'bg-yellow-500/30' : 'hover:bg-white/20'}`}
+                        className={`p-4 rounded-2xl glass transition-all border-white/5 ${showEmojiPicker ? 'bg-yellow-500/20 rotate-12' : 'hover:bg-white/10 shadow-xl'}`}
                     >
-                        <Smile size={24} className="text-white" />
+                        <Smile size={28} className={showEmojiPicker ? 'text-yellow-400' : 'text-white/80'} />
                     </button>
                     <button
                         onClick={() => setShowChat(!showChat)}
-                        className={`p-3 rounded-full glass transition-all ${showChat ? 'bg-blue-500/30' : 'hover:bg-white/20'} relative`}
+                        className={`p-4 rounded-2xl glass transition-all border-white/5 ${showChat ? 'bg-blue-500/20' : 'hover:bg-white/10 shadow-xl'} relative group`}
                     >
-                        <MessageCircle size={24} className="text-white" />
+                        <MessageCircle size={28} className={showChat ? 'text-blue-400' : 'text-white/80'} />
                         {messages.length > 0 && !showChat && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold">
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-black text-white shadow-lg border-2 border-background animate-bounce">
                                 {messages.length > 9 ? '9+' : messages.length}
                             </div>
                         )}
+                        <span className="absolute right-full mr-4 px-3 py-1 bg-black text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap font-bold uppercase tracking-widest hidden md:block">
+                            Room Chat
+                        </span>
                     </button>
                 </div>
             </div>
