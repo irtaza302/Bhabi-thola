@@ -85,14 +85,14 @@ export default function Home() {
     >
       <Card className={`glass ${className}`}>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20">
-              <Icon className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20 flex-shrink-0">
+              <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <CardTitle className="text-xl">{title}</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">{title}</CardTitle>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {children}
         </CardContent>
       </Card>
@@ -112,10 +112,10 @@ export default function Home() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
+            className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0 ${
                 index === 0 ? 'bg-yellow-500/20 text-yellow-400' :
                 index === 1 ? 'bg-gray-400/20 text-gray-300' :
                 index === 2 ? 'bg-orange-600/20 text-orange-400' :
@@ -123,18 +123,18 @@ export default function Home() {
               }`}>
                 {index + 1}
               </div>
-              <div>
-                <p className="font-semibold">{player.name}</p>
-                <p className="text-xs text-muted-foreground">@{player.username}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm sm:text-base truncate">{player.name}</p>
+                <p className="text-xs text-muted-foreground truncate">@{player.username}</p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0 ml-2">
               {showThola ? (
-                <p className="font-bold text-lg text-red-400">{player.tholaReceived}</p>
+                <p className="font-bold text-base sm:text-lg text-red-400">{player.tholaReceived}</p>
               ) : (
                 <>
-                  <p className="font-bold text-lg">{player.gamesWon}</p>
-                  <p className="text-xs text-muted-foreground">{player.winRate}% win rate</p>
+                  <p className="font-bold text-base sm:text-lg">{player.gamesWon}</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">{player.winRate}% win rate</p>
                 </>
               )}
             </div>
@@ -156,38 +156,39 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 overflow-y-auto">
+    <div className="min-h-screen p-4 md:p-8 pb-8">
       <BackgroundEffect />
       
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
         >
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Bhabi Thola Stats
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Track your performance and compete with others
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {user && (
               <>
                 <Button
                   onClick={() => router.push('/game')}
-                  className="glass"
+                  className="glass w-full sm:w-auto"
                   variant="default"
                 >
                   <Gamepad2 className="w-4 h-4 mr-2" />
-                  Play Game
+                  <span className="hidden sm:inline">Play Game</span>
+                  <span className="sm:hidden">Play</span>
                 </Button>
                 <Button
                   onClick={handleLogout}
-                  className="glass"
+                  className="glass w-full sm:w-auto"
                   variant="outline"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
@@ -198,36 +199,37 @@ export default function Home() {
             {!user && (
               <Button
                 onClick={() => router.push('/game')}
-                className="glass"
+                className="glass w-full sm:w-auto"
                 variant="default"
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />
-                Play Game
+                <span className="hidden sm:inline">Play Game</span>
+                <span className="sm:hidden">Play</span>
               </Button>
             )}
           </div>
         </motion.div>
 
         {/* Overall Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <StatCard title="Total Players" icon={Users}>
-            <p className="text-3xl font-bold">{stats?.totalPlayers || 0}</p>
-            <p className="text-sm text-muted-foreground mt-1">Registered players</p>
+            <p className="text-2xl sm:text-3xl font-bold">{stats?.totalPlayers || 0}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Registered players</p>
           </StatCard>
           <StatCard title="Total Games" icon={Play}>
-            <p className="text-3xl font-bold">{stats?.totalGames || 0}</p>
-            <p className="text-sm text-muted-foreground mt-1">Games played</p>
+            <p className="text-2xl sm:text-3xl font-bold">{stats?.totalGames || 0}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Games played</p>
           </StatCard>
           <StatCard title="Active Players" icon={Users}>
-            <p className="text-3xl font-bold">
+            <p className="text-2xl sm:text-3xl font-bold">
               {stats?.allPlayers.filter(p => p.gamesPlayed > 0).length || 0}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">Players with games</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Players with games</p>
           </StatCard>
         </div>
 
         {/* Leaderboards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Most Wins */}
           <StatCard title="🏆 Most Wins" icon={Trophy} className="border-yellow-500/20">
             <LeaderboardList players={stats?.topByWins || []} />
@@ -252,48 +254,50 @@ export default function Home() {
         {/* All Players Table */}
         {stats && stats.allPlayers.length > 0 && (
           <StatCard title="📊 All Players" icon={Award}>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left p-3 text-sm font-semibold">Player</th>
-                    <th className="text-center p-3 text-sm font-semibold">Games</th>
-                    <th className="text-center p-3 text-sm font-semibold">Wins</th>
-                    <th className="text-center p-3 text-sm font-semibold">Losses</th>
-                    <th className="text-center p-3 text-sm font-semibold">Thola</th>
-                    <th className="text-center p-3 text-sm font-semibold">Win Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.allPlayers.map((player, index) => (
-                    <motion.tr
-                      key={player.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="border-b border-border/30 hover:bg-background/30 transition-colors"
-                    >
-                      <td className="p-3">
-                        <div>
-                          <p className="font-semibold">{player.name}</p>
-                          <p className="text-xs text-muted-foreground">@{player.username}</p>
-                        </div>
-                      </td>
-                      <td className="text-center p-3">{player.gamesPlayed}</td>
-                      <td className="text-center p-3 text-green-400 font-semibold">{player.gamesWon}</td>
-                      <td className="text-center p-3 text-red-400 font-semibold">{player.gamesLost}</td>
-                      <td className="text-center p-3 text-orange-400 font-semibold">{player.tholaReceived}</td>
-                      <td className="text-center p-3">
-                        <span className={`font-semibold ${
-                          parseFloat(player.winRate) >= 50 ? 'text-green-400' : 'text-muted-foreground'
-                        }`}>
-                          {player.winRate}%
-                        </span>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+                <table className="w-full min-w-[640px] sm:min-w-0">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="text-left p-2 sm:p-3 text-xs sm:text-sm font-semibold">Player</th>
+                      <th className="text-center p-2 sm:p-3 text-xs sm:text-sm font-semibold">Games</th>
+                      <th className="text-center p-2 sm:p-3 text-xs sm:text-sm font-semibold">Wins</th>
+                      <th className="text-center p-2 sm:p-3 text-xs sm:text-sm font-semibold">Losses</th>
+                      <th className="text-center p-2 sm:p-3 text-xs sm:text-sm font-semibold">Thola</th>
+                      <th className="text-center p-2 sm:p-3 text-xs sm:text-sm font-semibold">Win Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.allPlayers.map((player, index) => (
+                      <motion.tr
+                        key={player.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="border-b border-border/30 hover:bg-background/30 transition-colors"
+                      >
+                        <td className="p-2 sm:p-3">
+                          <div>
+                            <p className="font-semibold text-sm sm:text-base">{player.name}</p>
+                            <p className="text-xs text-muted-foreground">@{player.username}</p>
+                          </div>
+                        </td>
+                        <td className="text-center p-2 sm:p-3 text-sm sm:text-base">{player.gamesPlayed}</td>
+                        <td className="text-center p-2 sm:p-3 text-sm sm:text-base text-green-400 font-semibold">{player.gamesWon}</td>
+                        <td className="text-center p-2 sm:p-3 text-sm sm:text-base text-red-400 font-semibold">{player.gamesLost}</td>
+                        <td className="text-center p-2 sm:p-3 text-sm sm:text-base text-orange-400 font-semibold">{player.tholaReceived}</td>
+                        <td className="text-center p-2 sm:p-3">
+                          <span className={`text-sm sm:text-base font-semibold ${
+                            parseFloat(player.winRate) >= 50 ? 'text-green-400' : 'text-muted-foreground'
+                          }`}>
+                            {player.winRate}%
+                          </span>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </StatCard>
         )}

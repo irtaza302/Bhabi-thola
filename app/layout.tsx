@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.variable} antialiased relative min-h-screen`}>
         <BackgroundEffect />
-        <div className="relative z-10 w-full h-full">
+        <div className="relative z-10 w-full min-h-screen">
           {children}
         </div>
       </body>

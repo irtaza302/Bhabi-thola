@@ -37,10 +37,9 @@ body {
       var(--color-felt-green-dark) 100%);
   background-attachment: fixed;
   font-family: "Outfit", sans-serif;
-  overflow: hidden;
-  height: 100vh;
   margin: 0;
   color: var(--foreground);
+  overflow-x: hidden;
 }
 
 .glass {
