@@ -28,6 +28,7 @@ export interface Player {
   order: number;
   isConnected: boolean;
   dbId?: string;
+  tholaReceivedThisGame?: number; // Track thola received in current game
 }
 
 export interface GameState {
@@ -83,7 +84,12 @@ export const shuffle = (deck: Card[]): Card[] => {
 
 export const dealCards = (players: Player[]): Player[] => {
   const deck = shuffle(createDeck());
-  const newPlayers: Player[] = players.map((p) => ({ ...p, hand: [] as Card[], isOut: false }));
+  const newPlayers: Player[] = players.map((p) => ({ 
+    ...p, 
+    hand: [] as Card[], 
+    isOut: false,
+    tholaReceivedThisGame: p.tholaReceivedThisGame ?? 0
+  }));
 
   deck.forEach((card, index) => {
     const playerIndex = index % players.length;

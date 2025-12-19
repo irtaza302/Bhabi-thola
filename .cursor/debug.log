@@ -72,3 +72,7 @@
 {"location":"app/api/auth/me/route.ts:27","message":"User found, returning user data","data":{"userId":"43077da5-4538-452a-a086-f274d92d6616","username":"Irtaza"},"timestamp":1766142820122,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
 {"location":"app/game/page.tsx:58","message":"/api/auth/me response","data":{"status":200,"ok":true},"timestamp":1766142820129,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
 {"location":"app/game/page.tsx:60","message":"Auto-login successful","data":{"userId":"43077da5-4538-452a-a086-f274d92d6616","username":"Irtaza"},"timestamp":1766142820130,"sessionId":"debug-session","runId":"post-fix","hypothesisId":"C"}
+{"location":"app/api/auth/me/route.ts:10","message":"/api/auth/me called","data":{"hasToken":true,"tokenLength":197},"timestamp":1766143018658,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"app/api/auth/me/route.ts:21","message":"Token verified, fetching user","data":{"userId":"43077da5-4538-452a-a086-f274d92d6616"},"timestamp":1766143018664,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"app/api/auth/me/route.ts:10","message":"/api/auth/me called","data":{"hasToken":true,"tokenLength":197},"timestamp":1766143019683,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"app/api/auth/me/route.ts:21","message":"Token verified, fetching user","data":{"userId":"43077da5-4538-452a-a086-f274d92d6616"},"timestamp":1766143019685,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}

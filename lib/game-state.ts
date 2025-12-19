@@ -73,14 +73,23 @@ export const checkWinners = (gameState: GameState): void => {
 const persistGameResults = async (gameState: GameState) => {
   console.log('💾 Persisting game results to database...');
   try {
+    // Find the bhabi (the one who lost - last player remaining)
+    const activePlayers = gameState.players.filter(p => !p.isOut);
+    const bhabiId = activePlayers.length === 1 ? activePlayers[0].id : null;
+
     const promises = gameState.players.map(async (p) => {
       if (!p.dbId) return;
 
       const isWinner = p.isOut; // Anyone who got out is a winner in Bhabi
+      const isBhabi = p.id === bhabiId; // The last remaining player is the bhabi (loser)
+      const tholaReceived = p.tholaReceivedThisGame || 0;
+
       await db.update(users)
         .set({
           gamesPlayed: drizzleSql`${users.gamesPlayed} + 1`,
           gamesWon: isWinner ? drizzleSql`${users.gamesWon} + 1` : users.gamesWon,
+          gamesLost: isBhabi ? drizzleSql`${users.gamesLost} + 1` : users.gamesLost,
+          tholaReceived: drizzleSql`${users.tholaReceived} + ${tholaReceived}`,
         })
         .where(eq(users.id, p.dbId));
     });
@@ -232,6 +241,10 @@ export const handleJoin = async (playerId: string, name: string, userId?: string
     // Update the player's ID and connection status
     existingPlayer.id = playerId;
     existingPlayer.isConnected = true;
+    // Ensure tholaReceivedThisGame is initialized
+    if (existingPlayer.tholaReceivedThisGame === undefined) {
+      existingPlayer.tholaReceivedThisGame = 0;
+    }
     
     // Set appropriate message
     if (oldPlayerId === playerId) {
@@ -258,7 +271,8 @@ export const handleJoin = async (playerId: string, name: string, userId?: string
     isOut: false,
     isConnected: true,
     order: gameState.players.length,
-    dbId: userId
+    dbId: userId,
+    tholaReceivedThisGame: 0
   };
 
   gameState.players.push(newPlayer);
@@ -280,6 +294,10 @@ export const handleStartGame = async (playerId: string): Promise<{ success: bool
   }
 
   gameState.players = dealCards(gameState.players);
+  // Reset thola tracking for new game
+  gameState.players.forEach(p => {
+    p.tholaReceivedThisGame = 0;
+  });
   gameState.status = 'PLAYING';
   gameState.currentTurn = getStartingPlayer(gameState.players);
   gameState.currentSuit = null;
@@ -338,6 +356,11 @@ export const handlePlayCard = async (playerId: string, card: Card): Promise<{ su
           if (currentRecipient && currentState.tableCards.length > 0) {
             // Give the cards to recipient
             currentRecipient.hand.push(...cardsToGive);
+            // Track thola received
+            if (currentRecipient.tholaReceivedThisGame === undefined) {
+              currentRecipient.tholaReceivedThisGame = 0;
+            }
+            currentRecipient.tholaReceivedThisGame += cardsToGive.length;
             if (currentRecipient.isOut) {
               currentRecipient.isOut = false;
               currentState.winnerOrder = currentState.winnerOrder.filter(id => id !== recipientId);

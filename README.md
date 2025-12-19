@@ -22,6 +22,12 @@ A multiplayer card game built with Next.js and Ably for real-time communication.
    ```bash
    npx drizzle-kit push
    ```
+   
+   **Note**: After updating the schema (e.g., adding new stats fields), you need to run migrations:
+   ```bash
+   npx drizzle-kit generate
+   npx drizzle-kit push
+   ```
 
 4. Start the Next.js development server:
    ```bash
