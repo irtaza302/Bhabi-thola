@@ -58,24 +58,18 @@ This project uses:
 
 This app is fully compatible with Vercel deployment:
 
-1. **Set Environment Variables** in Vercel:
-   - `ABLY_API_KEY` - Your Ably API key
-   - `NEXT_PUBLIC_DATABASE_URL` - Your database connection string
-   - `JWT_SECRET` - (Optional) Secret key for JWT tokens (defaults to a development key if not set)
+1. **Set Environment Variables** in Vercel Dashboard:
+   - `NEXT_PUBLIC_DATABASE_URL` or `DATABASE_URL` - Your database connection string
+   - `ABLY_API_KEY` or `NEXT_PUBLIC_ABLY_API_KEY` - Your Ably API key
+   - `JWT_SECRET` - (Optional but recommended) Secret key for JWT tokens
 
 2. **Run Database Migrations** (IMPORTANT):
    Before or after deployment, you need to create the database tables:
    ```bash
-   # Set your database URL
-   export NEXT_PUBLIC_DATABASE_URL="your_database_url"
+   # Get environment variables from Vercel
+   vercel env pull .env.local
    
    # Run migrations
-   npx drizzle-kit push
-   ```
-   
-   Or use Vercel's CLI with environment variables:
-   ```bash
-   vercel env pull .env.local
    npx drizzle-kit push
    ```
 
@@ -94,6 +88,8 @@ This app is fully compatible with Vercel deployment:
 The app uses Ably for real-time communication, which works perfectly with Vercel's serverless architecture. No separate WebSocket server needed!
 
 **Production URL**: https://bhabi-thola.vercel.app
+
+**⚠️ Having Vercel-specific issues?** See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed troubleshooting guide.
 
 ## Debugging
 
