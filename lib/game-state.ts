@@ -383,3 +383,34 @@ export const handleDisconnect = async (playerId: string): Promise<void> => {
   await updateGameState(gameState);
 };
 
+// Handle player leave - terminates room completely and removes all users
+export const handleLeave = async (playerId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const gameState = await getGameState();
+    const leavingPlayer = gameState.players.find(p => p.id === playerId);
+    
+    if (!leavingPlayer) {
+      return { success: false, error: 'Player not found' };
+    }
+
+    // Completely terminate the room - reset everything
+    const resetState: GameState = {
+      players: [],
+      currentTurn: '',
+      currentSuit: null,
+      tableCards: [],
+      lastTholaBy: null,
+      status: 'LOBBY',
+      winnerOrder: [],
+      message: 'Room terminated. Waiting for players...'
+    };
+
+    await updateGameState(resetState);
+    console.log(`🚪 Room terminated by ${leavingPlayer.name}. All players removed.`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error handling leave:', error);
+    return { success: false, error: 'Failed to leave game' };
+  }
+};
+

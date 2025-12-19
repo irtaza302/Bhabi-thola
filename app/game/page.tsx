@@ -271,6 +271,30 @@ export default function GamePage() {
         }
     };
 
+    const leaveGame = async () => {
+        if (!playerId) return;
+        addDebugLog('🚪 Leaving game and terminating room...');
+        try {
+            const res = await fetch('/api/game/leave', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId }),
+            });
+            if (res.ok) {
+                // Reset local state
+                setJoined(false);
+                setGameState(null);
+                addDebugLog('✅ Left game successfully');
+            } else {
+                const data = await res.json();
+                setError(data.error || 'Failed to leave game');
+            }
+        } catch (err) {
+            console.error('Leave game error:', err);
+            setError('Failed to leave game');
+        }
+    };
+
     if (isAuthenticating) {
         return (
             <div className="flex items-center justify-center h-screen bg-black/50">
@@ -419,6 +443,14 @@ export default function GamePage() {
 
                 <div className="flex gap-2">
                     <button
+                        onClick={leaveGame}
+                        className="glass px-4 py-2 text-sm font-medium transition-all text-red-400/80 hover:text-red-400 hover:bg-red-500/10 border-white/5 flex items-center gap-2"
+                        title="Leave Game (Terminates Room)"
+                    >
+                        <LogOut size={16} />
+                        <span className="hidden md:inline">Leave</span>
+                    </button>
+                    <button
                         onClick={() => setShowDebug(!showDebug)}
                         className={`glass px-4 py-2 text-sm font-medium transition-all ${showDebug ? 'bg-blue-500/20 text-blue-300' : 'text-white/60 hover:text-white border-white/5'}`}
                     >
@@ -521,6 +553,19 @@ export default function GamePage() {
                             Host is preparing...
                         </div>
                     )}
+
+                    {/* Leave Game Button in Lobby */}
+                    <motion.button
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={leaveGame}
+                        className="mt-4 glass px-6 py-3 text-red-400/80 hover:text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 font-bold text-sm transition-all"
+                    >
+                        <LogOut size={18} />
+                        Leave Game
+                    </motion.button>
                 </div>
             )}
 
