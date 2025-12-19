@@ -39,7 +39,7 @@ const Card: React.FC<CardProps> = ({ card, onClick, disabled, isTable, isLegal }
             className={`card ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} ${isTable ? 'table-card' : 'hand-card'} ${isLegal ? 'legal-move' : ''}`}
             style={{ zIndex: isTable ? 10 : 1 }}
         >
-            <div className={`card-inner ${suitClass} relative flex flex-col justify-between overflow-hidden ${disabled ? 'grayscale' : ''} ${isLegal ? 'border-primary shadow-[0_0_15px_rgba(101,255,160,0.3)]' : 'border-white/10'}`}>
+            <div className={`card-inner ${suitClass} relative flex flex-col justify-between overflow-hidden ${isLegal ? 'border-primary shadow-[0_0_15px_rgba(101,255,160,0.3)]' : 'border-white/10'}`}>
                 {/* Glossy Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 

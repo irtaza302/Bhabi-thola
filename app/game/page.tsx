@@ -38,6 +38,7 @@ export default function GamePage() {
     const [activeEmojis, setActiveEmojis] = useState<EmojiReaction[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [visibleMessages, setVisibleMessages] = useState<ChatMessage[]>([]);
+    const [tholaRecipients, setTholaRecipients] = useState<Set<string>>(new Set());
     const [user, setUser] = useState<{ id: string, username: string, name: string, gamesPlayed: number, gamesWon: number } | null>(null);
     const [isAuthenticating, setIsAuthenticating] = useState(true);
     const ablyClientRef = useRef<Ably.Realtime | null>(null);
@@ -110,6 +111,26 @@ export default function GamePage() {
                             channel.subscribe('gameState', (message) => {
                                 const state = message.data as GameState;
                                 addDebugLog(`📊 Game state updated: ${state.status}, ${state.players.length} players`);
+                                
+                                // Check if thola was given and track recipient
+                                if (state.message.includes('gave THOLA to')) {
+                                    const recipientName = state.message.split('gave THOLA to ')[1]?.split('!')[0];
+                                    if (recipientName) {
+                                        const recipient = state.players.find(p => p.name === recipientName);
+                                        if (recipient) {
+                                            setTholaRecipients(prev => new Set([...prev, recipient.id]));
+                                            // Clear badge after 3 seconds
+                                            setTimeout(() => {
+                                                setTholaRecipients(prev => {
+                                                    const newSet = new Set(prev);
+                                                    newSet.delete(recipient.id);
+                                                    return newSet;
+                                                });
+                                            }, 3000);
+                                        }
+                                    }
+                                }
+                                
                                 setGameState(state);
                             });
                             
@@ -273,7 +294,7 @@ export default function GamePage() {
 
     const leaveGame = async () => {
         if (!playerId) return;
-        addDebugLog('🚪 Leaving game and terminating room...');
+        addDebugLog('🚪 Leaving game...');
         try {
             const res = await fetch('/api/game/leave', {
                 method: 'POST',
@@ -292,6 +313,33 @@ export default function GamePage() {
         } catch (err) {
             console.error('Leave game error:', err);
             setError('Failed to leave game');
+        }
+    };
+
+    const terminateRoom = async () => {
+        if (!playerId) return;
+        if (!confirm('Are you sure you want to terminate the entire room? This will remove all players.')) {
+            return;
+        }
+        addDebugLog('🔥 Terminating room...');
+        try {
+            const res = await fetch('/api/game/terminate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId }),
+            });
+            if (res.ok) {
+                // Reset local state
+                setJoined(false);
+                setGameState(null);
+                addDebugLog('✅ Room terminated successfully');
+            } else {
+                const data = await res.json();
+                setError(data.error || 'Failed to terminate room');
+            }
+        } catch (err) {
+            console.error('Terminate room error:', err);
+            setError('Failed to terminate room');
         }
     };
 
@@ -444,11 +492,19 @@ export default function GamePage() {
                 <div className="flex gap-2">
                     <button
                         onClick={leaveGame}
-                        className="glass px-4 py-2 text-sm font-medium transition-all text-red-400/80 hover:text-red-400 hover:bg-red-500/10 border-white/5 flex items-center gap-2"
-                        title="Leave Game (Terminates Room)"
+                        className="glass px-4 py-2 text-sm font-medium transition-all text-orange-400/80 hover:text-orange-400 hover:bg-orange-500/10 border-white/5 flex items-center gap-2"
+                        title="Leave Game"
                     >
                         <LogOut size={16} />
                         <span className="hidden md:inline">Leave</span>
+                    </button>
+                    <button
+                        onClick={terminateRoom}
+                        className="glass px-4 py-2 text-sm font-medium transition-all text-red-400/80 hover:text-red-400 hover:bg-red-500/10 border-white/5 flex items-center gap-2"
+                        title="Terminate Room (Removes All Players)"
+                    >
+                        <X size={16} />
+                        <span className="hidden md:inline">Terminate</span>
                     </button>
                     <button
                         onClick={() => setShowDebug(!showDebug)}
@@ -554,18 +610,31 @@ export default function GamePage() {
                         </div>
                     )}
 
-                    {/* Leave Game Button in Lobby */}
-                    <motion.button
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={leaveGame}
-                        className="mt-4 glass px-6 py-3 text-red-400/80 hover:text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 font-bold text-sm transition-all"
-                    >
-                        <LogOut size={18} />
-                        Leave Game
-                    </motion.button>
+                    {/* Leave Game and Terminate Room Buttons in Lobby */}
+                    <div className="mt-4 flex gap-3 justify-center">
+                        <motion.button
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={leaveGame}
+                            className="glass px-6 py-3 text-orange-400/80 hover:text-orange-400 hover:bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center gap-2 font-bold text-sm transition-all"
+                        >
+                            <LogOut size={18} />
+                            Leave Game
+                        </motion.button>
+                        <motion.button
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={terminateRoom}
+                            className="glass px-6 py-3 text-red-400/80 hover:text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 font-bold text-sm transition-all"
+                        >
+                            <X size={18} />
+                            Terminate Room
+                        </motion.button>
+                    </div>
                 </div>
             )}
 
@@ -619,6 +688,23 @@ export default function GamePage() {
                                                     {e.emoji}
                                                 </motion.div>
                                             ))}
+                                        </AnimatePresence>
+
+                                        {/* Thola Received Badge */}
+                                        <AnimatePresence>
+                                            {tholaRecipients.has(p.id) && (
+                                                <motion.div
+                                                    initial={{ scale: 0, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    exit={{ scale: 0, opacity: 0 }}
+                                                    className="absolute -top-2 -right-2 z-[70]"
+                                                >
+                                                    <div className="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full border-2 border-white shadow-lg animate-pulse flex items-center gap-1">
+                                                        <span>🔥</span>
+                                                        <span>THOLA</span>
+                                                    </div>
+                                                </motion.div>
+                                            )}
                                         </AnimatePresence>
                                     </div>
 
@@ -718,6 +804,21 @@ export default function GamePage() {
                             </AnimatePresence>
                         </div>
 
+                        <AnimatePresence>
+                            {tholaRecipients.has(playerId) && (
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0, y: -10 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    className="mb-2 md:mb-4"
+                                >
+                                    <div className="bg-red-500 text-white text-xs md:text-sm font-black px-4 md:px-6 py-2 rounded-full border-2 border-white shadow-lg animate-pulse flex items-center gap-2">
+                                        <span className="text-lg">🔥</span>
+                                        <span>YOU RECEIVED THOLA!</span>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         {isMyTurn && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}

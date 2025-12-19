@@ -322,14 +322,42 @@ export const handlePlayCard = async (playerId: string, card: Card): Promise<{ su
     const recipient = gameState.players.find(p => p.id === recipientId);
     if (recipient) {
       gameState.message = `${player.name} gave THOLA to ${recipient.name}!`;
-      recipient.hand.push(...gameState.tableCards.map(tc => tc.card));
-      if (recipient.isOut) {
-        recipient.isOut = false;
-        gameState.winnerOrder = gameState.winnerOrder.filter(id => id !== recipientId);
-      }
+      // Store the cards that will be given (for animation/delay)
+      const cardsToGive = [...gameState.tableCards.map(tc => tc.card)];
+      
+      // Update state first to show the thola message and cards on table
+      await updateGameState(gameState);
+      
+      // After 2 seconds, actually give the cards to the recipient
+      // Using setTimeout in Node.js API route (should work fine)
+      setTimeout(async () => {
+        try {
+          const currentState = await getGameState();
+          const currentRecipient = currentState.players.find(p => p.id === recipientId);
+          // Verify the thola is still valid (cards still on table, recipient still exists)
+          if (currentRecipient && currentState.tableCards.length > 0) {
+            // Give the cards to recipient
+            currentRecipient.hand.push(...cardsToGive);
+            if (currentRecipient.isOut) {
+              currentRecipient.isOut = false;
+              currentState.winnerOrder = currentState.winnerOrder.filter(id => id !== recipientId);
+            }
+            checkWinners(currentState);
+            // Clear table and move turn to recipient
+            currentState.tableCards = [];
+            currentState.currentSuit = null;
+            currentState.currentTurn = recipientId;
+            currentState.message = `${currentRecipient.name} received ${cardsToGive.length} card(s)!`;
+            await updateGameState(currentState);
+          }
+        } catch (error) {
+          console.error('Error completing thola transfer:', error);
+        }
+      }, 2000);
+      
+      return { success: true };
     }
     checkWinners(gameState);
-    // End trick after delay (handled client-side or via setTimeout in API route)
     gameState.tableCards = [];
     gameState.currentSuit = null;
     gameState.currentTurn = recipientId;
@@ -341,18 +369,38 @@ export const handlePlayCard = async (playerId: string, card: Card): Promise<{ su
   const connectedActivePlayers = gameState.players.filter(p => !p.isOut && p.isConnected);
   if (gameState.tableCards.length >= connectedActivePlayers.length) {
     const highestPlayerId = findTholaRecipient(gameState.tableCards, gameState.currentSuit as Suit);
-    gameState.message = `${gameState.players.find(p => p.id === highestPlayerId)?.name} won the trick.`;
-    checkWinners(gameState);
-    gameState.tableCards = [];
-    gameState.currentSuit = null;
-    gameState.currentTurn = highestPlayerId;
+    const winnerName = gameState.players.find(p => p.id === highestPlayerId)?.name || 'Unknown';
+    gameState.message = `${winnerName} won the trick.`;
+    
+    // Update state first to show all cards on table
+    await updateGameState(gameState);
+    
+    // After 2 seconds, clear the table and move to next turn
+    setTimeout(async () => {
+      try {
+        const currentState = await getGameState();
+        // Verify the trick is still complete (all cards still on table)
+        const currentActivePlayers = currentState.players.filter(p => !p.isOut && p.isConnected);
+        if (currentState.tableCards.length >= currentActivePlayers.length) {
+          checkWinners(currentState);
+          currentState.tableCards = [];
+          currentState.currentSuit = null;
+          currentState.currentTurn = highestPlayerId;
+          currentState.message = `${winnerName}'s turn`;
+          await updateGameState(currentState);
+        }
+      } catch (error) {
+        console.error('Error completing trick:', error);
+      }
+    }, 2000);
+    
+    return { success: true };
   } else {
     gameState.currentTurn = getNextActivePlayerId(gameState, playerId);
     checkWinners(gameState);
+    await updateGameState(gameState);
+    return { success: true };
   }
-
-  await updateGameState(gameState);
-  return { success: true };
 };
 
 // Handle player disconnect
@@ -383,13 +431,63 @@ export const handleDisconnect = async (playerId: string): Promise<void> => {
   await updateGameState(gameState);
 };
 
-// Handle player leave - terminates room completely and removes all users
-export const handleLeave = async (playerId: string): Promise<{ success: boolean; error?: string }> => {
+// Handle individual player leave - only removes the specific player
+export const handleIndividualLeave = async (playerId: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const gameState = await getGameState();
     const leavingPlayer = gameState.players.find(p => p.id === playerId);
     
     if (!leavingPlayer) {
+      return { success: false, error: 'Player not found' };
+    }
+
+    // Remove only this player
+    gameState.players = gameState.players.filter(p => p.id !== playerId);
+    
+    // If it was their turn, move to next player
+    if (gameState.currentTurn === playerId && gameState.status === 'PLAYING') {
+      gameState.currentTurn = getNextActivePlayerId(gameState, playerId);
+    }
+    
+    // Update table cards if they had any
+    gameState.tableCards = gameState.tableCards.filter(tc => tc.playerId !== playerId);
+    
+    // If less than 2 players remain, reset to lobby
+    if (gameState.players.length < 2 && gameState.status === 'PLAYING') {
+      gameState.status = 'LOBBY';
+      gameState.currentTurn = '';
+      gameState.currentSuit = null;
+      gameState.tableCards = [];
+      gameState.message = `${leavingPlayer.name} left. Waiting for players...`;
+    } else {
+      gameState.message = `${leavingPlayer.name} left the game.`;
+    }
+    
+    // If no players remain, reset completely
+    if (gameState.players.length === 0) {
+      gameState.status = 'LOBBY';
+      gameState.currentTurn = '';
+      gameState.currentSuit = null;
+      gameState.tableCards = [];
+      gameState.message = 'Waiting for players...';
+    }
+
+    await updateGameState(gameState);
+    console.log(`🚪 ${leavingPlayer.name} left the game.`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error handling individual leave:', error);
+    return { success: false, error: 'Failed to leave game' };
+  }
+};
+
+// Handle room termination - terminates room completely and removes all users
+export const handleTerminateRoom = async (playerId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const gameState = await getGameState();
+    const terminatingPlayer = gameState.players.find(p => p.id === playerId);
+    
+    if (!terminatingPlayer) {
       return { success: false, error: 'Player not found' };
     }
 
@@ -406,11 +504,14 @@ export const handleLeave = async (playerId: string): Promise<{ success: boolean;
     };
 
     await updateGameState(resetState);
-    console.log(`🚪 Room terminated by ${leavingPlayer.name}. All players removed.`);
+    console.log(`🚪 Room terminated by ${terminatingPlayer.name}. All players removed.`);
     return { success: true };
   } catch (error) {
-    console.error('Error handling leave:', error);
-    return { success: false, error: 'Failed to leave game' };
+    console.error('Error handling room termination:', error);
+    return { success: false, error: 'Failed to terminate room' };
   }
 };
+
+// Legacy function name for backward compatibility - now calls individual leave
+export const handleLeave = handleIndividualLeave;
 
