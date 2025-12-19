@@ -34,18 +34,36 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
         }
 
-        const token = await createToken({ id: user.id, username: user.username });
+        // Create JWT token
+        let token;
+        try {
+            token = await createToken({ id: user.id, username: user.username });
+        } catch (tokenError: any) {
+            console.error('Token creation error:', tokenError);
+            return NextResponse.json({ 
+                error: 'Failed to create authentication token',
+                message: tokenError.message || 'Token creation failed',
+            }, { status: 500 });
+        }
 
+        // Create response
         const response = NextResponse.json({
             user: { id: user.id, username: user.username, name: user.name }
         });
 
-        response.cookies.set('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7, // 1 week
-        });
+        // Set cookie
+        try {
+            response.cookies.set('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 24 * 7, // 1 week
+                path: '/',
+            });
+        } catch (cookieError: any) {
+            console.error('Cookie setting error:', cookieError);
+            // Continue even if cookie setting fails
+        }
 
         return response;
     } catch (error: any) {

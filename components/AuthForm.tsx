@@ -39,10 +39,14 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
             if (res.ok) {
                 onSuccess(data.user);
             } else {
-                setError(data.error || 'Something went wrong');
+                // Show detailed error message if available
+                const errorMsg = data.message || data.error || 'Something went wrong';
+                console.error('Auth error:', { status: res.status, data });
+                setError(errorMsg);
             }
-        } catch (err) {
-            setError('Connection failed');
+        } catch (err: any) {
+            console.error('Connection error:', err);
+            setError(err.message || 'Connection failed. Please check your internet connection.');
         } finally {
             setIsLoading(false);
         }
