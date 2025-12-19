@@ -17,7 +17,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const apiKey = process.env.ABLY_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'Ably API key not configured' }, { status: 500 });
     }
